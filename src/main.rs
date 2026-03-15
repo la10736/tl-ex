@@ -119,7 +119,7 @@ async fn translated(core: web::Data<PokemonService>, name: web::Path<(String,)>)
     debug!("New pokemon translated request '{name}'");
     match core.translated(&name).await {
         Ok(p) => HttpResponse::Ok().json(p),
-        Err(err) => HttpResponse::from(err).into(),
+        Err(err) => HttpResponse::from(err),
     }
 }
 
