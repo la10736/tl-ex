@@ -1,8 +1,11 @@
 //! A simple Pokedex REST API server.
 
-use actix_web::{get, web, App, Error, HttpResponse, HttpServer, Responder};
-use actix_web::body::MessageBody;
-use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
+use actix_web::{
+    App, Error, HttpResponse, HttpServer, Responder,
+    body::MessageBody,
+    dev::{ServiceFactory, ServiceRequest, ServiceResponse},
+    get, web,
+};
 use async_trait::async_trait;
 use clap::Parser;
 use log::debug;
@@ -28,7 +31,6 @@ pub enum ServiceError {
     Unknown { error: String },
 }
 
-
 /// The trait that abstract the async pokemon info provider.
 #[async_trait]
 trait PokemonProvider {
@@ -40,9 +42,7 @@ pub struct PokemonService {
 }
 
 impl PokemonService {
-    fn new(
-        pokemon_provider: impl PokemonProvider + 'static,
-    ) -> PokemonService {
+    fn new(pokemon_provider: impl PokemonProvider + 'static) -> PokemonService {
         PokemonService {
             provider: Box::new(pokemon_provider),
         }
@@ -59,23 +59,20 @@ struct VoidPokemonProvider;
 #[async_trait]
 impl PokemonProvider for VoidPokemonProvider {
     async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        Err(ServiceError::NotFound { name: name.to_string() })
+        Err(ServiceError::NotFound {
+            name: name.to_string(),
+        })
     }
 }
 
 impl Default for PokemonService {
     fn default() -> Self {
-        Self::new(
-            VoidPokemonProvider,
-        )
+        Self::new(VoidPokemonProvider)
     }
 }
 
 #[get("/pokemon/{name}")]
-async fn pokemon(
-    core: web::Data<PokemonService>,
-    name: web::Path<(String,)>,
-) -> impl Responder {
+async fn pokemon(core: web::Data<PokemonService>, name: web::Path<(String,)>) -> impl Responder {
     let name = name.into_inner().0;
     debug!("New pokemon request '{name}'");
     match core.pokemon(&name).await {
@@ -105,9 +102,7 @@ pub fn app(
     >,
 > {
     let core = core.unwrap_or_default();
-    App::new()
-        .app_data(web::Data::new(core))
-        .service(pokemon)
+    App::new().app_data(web::Data::new(core)).service(pokemon)
 }
 
 #[derive(Parser)]
