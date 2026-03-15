@@ -74,7 +74,6 @@ impl TranslationProvider for FakeTranslator {
     }
 }
 
-
 pub struct PokemonService {
     provider: Box<dyn PokemonProvider>,
     language_policy: Box<dyn SelectLanguagePolicy>,
@@ -99,14 +98,24 @@ impl PokemonService {
     }
 
     async fn translated(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        // Placeholder: don't translate anything, just return the pokemon like it is
-        self.pokemon(name).await
+        let mut p = self.pokemon(name).await?;
+        let language = self.language_policy.select(&p);
+        p.description = self
+            .translator
+            .translate(language, &p.description)
+            .await
+            .unwrap_or(p.description);
+        Ok(p)
     }
 }
 
 impl Default for PokemonService {
     fn default() -> Self {
-        Self::new(rustemon_provider::Rustemon::default(), FixedLanguageSelector(Language::Shakespeare), FakeTranslator)
+        Self::new(
+            rustemon_provider::Rustemon::default(),
+            FixedLanguageSelector(Language::Shakespeare),
+            FakeTranslator,
+        )
     }
 }
 

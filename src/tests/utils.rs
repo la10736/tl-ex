@@ -56,7 +56,7 @@ impl PokemonProvider for FakePokemonService {
         if self.provide_pokemon_error {
             return Err(ServiceError::Unknown {
                 error: format!("Pokemon name: {}", name),
-            })
+            });
         }
         self.pokemon_provider.pokemon(name).await
     }
