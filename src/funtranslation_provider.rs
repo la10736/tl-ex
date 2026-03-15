@@ -66,7 +66,8 @@ impl FunTranslator {
             .post(format!("{FUNTRANSLATE_ENDPOINT_URL}/{lang}"))
             .json(&request)
             .send()
-            .await
+            .await?
+            .error_for_status()
     }
 }
 
