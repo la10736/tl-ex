@@ -48,8 +48,8 @@ impl Server {
             "http://localhost:{}/pokemon/translated/{name}",
             self.port
         ))
-            .await
-            .unwrap();
+        .await
+        .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
         res.json().await.unwrap()

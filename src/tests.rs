@@ -104,16 +104,18 @@ mod integration {
 
         #[rstest]
         #[actix_web::test]
-        async fn should_translate(mewtwo: FakePokemonService,
-                                  #[values(Language::Shakespeare, Language::Yoda)] language: Language,
+        async fn should_translate(
+            mut mewtwo: FakePokemonService,
+            #[values(Language::Shakespeare, Language::Yoda)] language: Language,
         ) {
+            mewtwo.language = language;
             let mewtwo_desc = mewtwo.description("mewtwo").unwrap();
             let app = test::init_service(app(mewtwo.into())).await;
 
             let req = req("mewtwo");
             let res: Pokemon = test::call_and_read_body_json(&app, req).await;
 
-            assert_eq!(format!("{language:?}-{mewtwo_desc}"), res.description);
+            assert_eq!(format!("{language:?},{mewtwo_desc}"), res.description);
         }
 
         #[rstest]
