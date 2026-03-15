@@ -1,12 +1,12 @@
 //! Pokedex API acceptance tests. Every test run a server on a given port and execute the request.
 //!
 
-use std::io::{BufRead, BufReader};
-use std::process;
 use assert_cmd::cargo_bin;
 use reqwest::StatusCode;
 use rstest::{fixture, rstest};
 use serde::Deserialize;
+use std::io::{BufRead, BufReader};
+use std::process;
 
 const SERVER_STARTING_PORT: u16 = 5000;
 
@@ -84,16 +84,35 @@ fn server() -> Server {
 }
 
 #[rstest]
-#[case::mewtwo("mewtwo", "It was created by a scientist after years of horrific gene splicing and DNA engineering experiments.", "rare", true)]
-#[case::pikachu("pikachu", "When several of these POKéMON gather, their electricity could build and cause lightning storms.", "forest", false)]
+#[case::mewtwo(
+    "mewtwo",
+    "It was created by a scientist after years of horrific gene splicing and DNA engineering experiments.",
+    "rare",
+    true
+)]
+#[case::pikachu(
+    "pikachu",
+    "When several of these POKéMON gather, their electricity could build and cause lightning storms.",
+    "forest",
+    false
+)]
 #[actix_web::test]
-async fn pokemon(server: Server, #[case] name: &str, #[case] description: &str, #[case] habitat: &str, #[case] is_legendary: bool ) {
+async fn pokemon(
+    server: Server,
+    #[case] name: &str,
+    #[case] description: &str,
+    #[case] habitat: &str,
+    #[case] is_legendary: bool,
+) {
     let answer = server.pokemon(name).await;
 
-    assert_eq!(PokemonRequest {
-        name: name.to_string(),
-        description: description.to_string(),
-        habitat: habitat.to_string(),
-        is_legendary,
-    }, answer);
+    assert_eq!(
+        PokemonRequest {
+            name: name.to_string(),
+            description: description.to_string(),
+            habitat: habitat.to_string(),
+            is_legendary,
+        },
+        answer
+    );
 }

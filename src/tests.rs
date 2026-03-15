@@ -6,14 +6,8 @@ pub mod utils;
 
 mod integration {
     use super::*;
-    use actix_web::{
-        test,
-        http::StatusCode
-    };
-    use crate::{
-        tests::utils::InMemoryPokemonProvider,
-        tests::utils::ErrorPokemonProvider
-    };
+    use crate::{tests::utils::ErrorPokemonProvider, tests::utils::InMemoryPokemonProvider};
+    use actix_web::{http::StatusCode, test};
 
     #[fixture]
     fn empty() -> InMemoryPokemonProvider {
