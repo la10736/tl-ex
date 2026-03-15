@@ -4,7 +4,6 @@
 //!
 
 use super::{Pokemon, PokemonProvider, ServiceError};
-use crate::ServiceError::{NotFound, Unknown};
 use async_trait::async_trait;
 use log::warn;
 use rustemon::model::pokemon::PokemonSpecies;
@@ -48,7 +47,7 @@ impl Rustemon {
             .iter()
             .filter(|d| d.language.name == "en")
             .map(|t| &t.flavor_text)
-            .map(|desc| sanitize_description(&desc))
+            .map(|desc| sanitize_description(desc))
             .nth(0)
             .unwrap_or_default()
     }
@@ -60,12 +59,12 @@ impl Rustemon {
         rustemon::pokemon::pokemon::get_by_name(name, &self.client)
             .await
             .map_err(|e| match e {
-                Error::Reqwest(_) => NotFound {
+                Error::Reqwest(_) => ServiceError::NotFound {
                     name: name.to_string(),
                 },
                 _ => {
                     warn!("Failed to fetch Pokemon {name}: {e:?}");
-                    Unknown {
+                    ServiceError::Unknown {
                         error: format!("{e:?}"),
                     }
                 }
@@ -74,16 +73,14 @@ impl Rustemon {
 
     async fn fetch_pokemon_species(
         &self,
-        species_name: &String,
+        species_name: &str,
     ) -> Result<PokemonSpecies, ServiceError> {
-        rustemon::pokemon::pokemon_species::get_by_name(&species_name, &self.client)
+        rustemon::pokemon::pokemon_species::get_by_name(species_name, &self.client)
             .await
-            .map_err(|e| match e {
-                _ => {
-                    warn!("Failed to fetch species {species_name}: {e:?}");
-                    Unknown {
-                        error: format!("{e:?}"),
-                    }
+            .map_err(|e| {
+                warn!("Failed to fetch species {species_name}: {e:?}");
+                ServiceError::Unknown {
+                    error: format!("{e:?}"),
                 }
             })
     }
@@ -116,7 +113,7 @@ mod tests {
         let service = Rustemon::default();
 
         assert_eq!(
-            NotFound {
+            ServiceError::NotFound {
                 name: name.to_string()
             },
             service.pokemon(name).await.unwrap_err()
