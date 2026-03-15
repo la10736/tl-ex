@@ -3,7 +3,7 @@
 //! It's a base implementation and till doesn't expose any `rustemon` configuration.
 //!
 
-use super::{Pokemon, PokemonProvider, ServiceError};
+use super::{Pokemon, service::{PokemonProvider, ServiceError}};
 use async_trait::async_trait;
 use log::warn;
 use rustemon::model::pokemon::PokemonSpecies;

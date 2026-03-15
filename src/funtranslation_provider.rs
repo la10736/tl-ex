@@ -1,7 +1,7 @@
 //! A simple implementation that access to funtranslations.mercxry.me API to
 //! implement a TranslationProvider
 
-use crate::{Language, ServiceError, TranslationProvider};
+use crate::service::{Language, ServiceError, TranslationProvider};
 use async_trait::async_trait;
 use log::warn;
 use reqwest::{Error, Response};
