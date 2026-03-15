@@ -6,10 +6,10 @@ use actix_web::{
     dev::{ServiceFactory, ServiceRequest, ServiceResponse},
     get, web,
 };
-use async_trait::async_trait;
 use clap::Parser;
 use log::debug;
 use serde::{Deserialize, Serialize};
+use crate::service::{PokemonService, ServiceError};
 
 mod funtranslation_provider;
 mod language_policies;
@@ -17,6 +17,7 @@ mod rustemon_provider;
 
 #[cfg(test)]
 mod tests;
+mod service;
 
 /// Pokemon data type
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -27,82 +28,6 @@ pub struct Pokemon {
     pub is_legendary: bool,
 }
 
-#[derive(thiserror::Error, Debug, PartialEq)]
-pub enum ServiceError {
-    #[error("not found error")]
-    NotFound { name: String },
-    #[error("unknown service error: {error:?}")]
-    Unknown { error: String },
-}
-
-/// The trait that abstract the async pokemon info provider.
-#[async_trait]
-trait PokemonProvider {
-    async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError>;
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Language {
-    Yoda,
-    Shakespeare,
-}
-
-/// The trait that models the translation language selection.
-trait SelectLanguagePolicy {
-    fn select(&self, pokemon: &Pokemon) -> Language;
-}
-
-/// The trait that models the async translations service.
-#[async_trait]
-trait TranslationProvider {
-    async fn translate(&self, lang: Language, body: &str) -> Result<String, ServiceError>;
-}
-
-pub struct PokemonService {
-    provider: Box<dyn PokemonProvider>,
-    language_policy: Box<dyn SelectLanguagePolicy>,
-    translator: Box<dyn TranslationProvider>,
-}
-
-impl PokemonService {
-    fn new(
-        pokemon_provider: impl PokemonProvider + 'static,
-        language_policy: impl SelectLanguagePolicy + 'static,
-        translator: impl TranslationProvider + 'static,
-    ) -> PokemonService {
-        PokemonService {
-            provider: Box::new(pokemon_provider),
-            language_policy: Box::new(language_policy),
-            translator: Box::new(translator),
-        }
-    }
-
-    async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        self.provider.pokemon(name).await
-    }
-
-    async fn translated(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        let mut p = self.pokemon(name).await?;
-        let language = self.language_policy.select(&p);
-        p.description = self
-            .translator
-            .translate(language, &p.description)
-            .await
-            .unwrap_or(p.description);
-        Ok(p)
-    }
-}
-
-impl Default for PokemonService {
-    fn default() -> Self {
-        Self::new(
-            rustemon_provider::Rustemon::default(),
-            language_policies::CaveAndLegendarySpeakAsYoda,
-            funtranslation_provider::FunTranslator::default(),
-        )
-    }
-}
 
 #[get("/pokemon/{name}")]
 async fn pokemon(core: web::Data<PokemonService>, name: web::Path<(String,)>) -> impl Responder {
