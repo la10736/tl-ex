@@ -11,6 +11,7 @@ use clap::Parser;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
+mod funtranslation_provider;
 mod rustemon_provider;
 
 #[cfg(test)]
@@ -39,7 +40,8 @@ trait PokemonProvider {
     async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError>;
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Language {
     Yoda,
     Shakespeare,
@@ -63,15 +65,6 @@ impl SelectLanguagePolicy for FixedLanguageSelector {
 #[async_trait]
 trait TranslationProvider {
     async fn translate(&self, lang: Language, body: &str) -> Result<String, ServiceError>;
-}
-
-struct FakeTranslator;
-
-#[async_trait]
-impl TranslationProvider for FakeTranslator {
-    async fn translate(&self, lang: Language, body: &str) -> Result<String, ServiceError> {
-        Ok(format!("{lang:?}--{body}"))
-    }
 }
 
 pub struct PokemonService {
@@ -114,7 +107,7 @@ impl Default for PokemonService {
         Self::new(
             rustemon_provider::Rustemon::default(),
             FixedLanguageSelector(Language::Shakespeare),
-            FakeTranslator,
+            funtranslation_provider::FunTranslator::default(),
         )
     }
 }
