@@ -2,6 +2,8 @@
 name = "tl-ex"
 version = "0.1.0"
 edition = "2024"
+license = "Apache-2.0"
+authors = ["Michele d'Amico <michele.damico@gmail.com>"]
 
 [dependencies]
 actix-web = "4.13.0"
