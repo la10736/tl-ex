@@ -51,6 +51,16 @@ args = ["audit"]
 command = "cargo"
 args = ["llvm-cov", "--workspace", "--lcov", "--output-path", "lcov.info"]
 
+[tasks.cov-report-file]
+dependencies = ["cov"]
+command = "cargo"
+args = ["llvm-cov", "report", "--json", "--output-path", "coverage_report.json", "--summary-only"]
+
+[tasks.cov-report]
+dependencies = ["cov-report-file"]
+command = "cargo"
+args = ["llvm-cov", "report"]
+
 [tasks.udeps-inst]
 toolchain = "nightly"
 command = "cargo"

@@ -1,3 +1,5 @@
 /target
 
 rustemon-cache
+lcov.info
+coverage_report.json
