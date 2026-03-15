@@ -12,6 +12,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 
 mod funtranslation_provider;
+mod language_policies;
 mod rustemon_provider;
 
 #[cfg(test)]
@@ -50,15 +51,6 @@ pub enum Language {
 /// The trait that models the translation language selection.
 trait SelectLanguagePolicy {
     fn select(&self, pokemon: &Pokemon) -> Language;
-}
-
-struct FixedLanguageSelector(Language);
-
-#[async_trait]
-impl SelectLanguagePolicy for FixedLanguageSelector {
-    fn select(&self, _pokemon: &Pokemon) -> Language {
-        self.0
-    }
 }
 
 /// The trait that models the async translations service.
@@ -106,7 +98,7 @@ impl Default for PokemonService {
     fn default() -> Self {
         Self::new(
             rustemon_provider::Rustemon::default(),
-            FixedLanguageSelector(Language::Shakespeare),
+            language_policies::CaveAndLegendarySpeakAsYoda,
             funtranslation_provider::FunTranslator::default(),
         )
     }
