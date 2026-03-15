@@ -23,16 +23,9 @@ struct TranslationResponse {
     contents: TranslatedContent,
 }
 
+#[derive(Default)]
 pub struct FunTranslator {
     client: reqwest::Client,
-}
-
-impl Default for FunTranslator {
-    fn default() -> Self {
-        Self {
-            client: Default::default(),
-        }
-    }
 }
 
 #[async_trait]
