@@ -11,6 +11,8 @@ use clap::Parser;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
+mod rustemon_provider;
+
 #[cfg(test)]
 mod tests;
 
@@ -53,21 +55,9 @@ impl PokemonService {
     }
 }
 
-/// Empty provider
-struct VoidPokemonProvider;
-
-#[async_trait]
-impl PokemonProvider for VoidPokemonProvider {
-    async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        Err(ServiceError::NotFound {
-            name: name.to_string(),
-        })
-    }
-}
-
 impl Default for PokemonService {
     fn default() -> Self {
-        Self::new(VoidPokemonProvider)
+        Self::new(rustemon_provider::Rustemon::default())
     }
 }
 
