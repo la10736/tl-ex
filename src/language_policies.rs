@@ -4,7 +4,10 @@
 //! every legendary pokemon or for the ones that come from "cave". Otherwise return `Shakespeare`
 //!
 
-use crate::{Pokemon,service::{Language, SelectLanguagePolicy}};
+use crate::{
+    Pokemon,
+    service::{Language, SelectLanguagePolicy},
+};
 
 /// Select Yoda language for each legendary pokemom or that come from "cave"
 pub struct CaveAndLegendarySpeakAsYoda;

@@ -1,9 +1,8 @@
 //! Utilities for integration tests: provides fakes and in-memory sim implementation for the
 //! needed dependencies.
 
-use async_trait::async_trait;
-use crate::service::*;
 use super::*;
+use async_trait::async_trait;
 #[derive(Default, Clone)]
 /// Trivial InMemory implementation
 pub struct InMemoryPokemonProvider(pub HashMap<String, Pokemon>);
