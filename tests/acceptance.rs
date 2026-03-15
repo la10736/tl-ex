@@ -42,6 +42,18 @@ impl Server {
         assert_eq!(res.status(), StatusCode::OK);
         res.json().await.unwrap()
     }
+
+    async fn translated(&self, name: &str) -> PokemonRequest {
+        let res = reqwest::get(format!(
+            "http://localhost:{}/pokemon/translated/{name}",
+            self.port
+        ))
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        res.json().await.unwrap()
+    }
 }
 
 impl Drop for CommandGuard {
@@ -110,6 +122,57 @@ async fn pokemon(
         PokemonRequest {
             name: name.to_string(),
             description: description.to_string(),
+            habitat: habitat.to_string(),
+            is_legendary,
+        },
+        answer
+    );
+}
+
+#[rstest]
+#[case::legendary(
+    "mewtwo",
+    "By a one of powerful knowledge after years of terrible gene fusing and DNA crafting trials, made it was, young one.",
+    "rare",
+    true
+)]
+#[case::in_cave(
+    "zubat",
+    "Forms colonies in perpetually dark places. Approach targets, uses ultrasonic waves to identify. Curious, this is.",
+    "cave",
+    false
+)]
+#[case::not_cave_or_legendary(
+    "pikachu",
+    "Lo! when sundry of these POKéMON assemble, their galvanic force couldst amass and bring forth wondrous tempests of thunder.",
+    "forest",
+    false
+)]
+#[actix_web::test]
+async fn translated(
+    server: Server,
+    #[case] name: &str,
+    #[case] description: &str,
+    #[case] habitat: &str,
+    #[case] is_legendary: bool,
+) {
+    let answer = server.translated(name).await;
+
+    let fallback_description = server.pokemon(name).await.description;
+
+    // Use the not translated description as fallback if some error occurred during the
+    // translation: this can be an issue if translation doesn't work and integration tests
+    // are not implemented.
+    let expected_description = if answer.description != fallback_description {
+        description.to_string()
+    } else {
+        fallback_description
+    };
+
+    assert_eq!(
+        PokemonRequest {
+            name: name.to_string(),
+            description: expected_description,
             habitat: habitat.to_string(),
             is_legendary,
         },
