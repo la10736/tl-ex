@@ -1,8 +1,10 @@
 //! Service: Traits and implementation.
 
+use crate::{Pokemon, funtranslation_provider, language_policies, rustemon_provider};
+// Even we can use _native_ async trait we prefer to use this macro because the native one are
+// not object safe (AKA dynamic compatible)
 use async_trait::async_trait;
 use serde::Deserialize;
-use crate::{funtranslation_provider, language_policies, rustemon_provider, Pokemon};
 
 /// The trait that abstract the async pokemon info provider.
 #[async_trait]
@@ -82,4 +84,3 @@ impl Default for PokemonService {
         )
     }
 }
-

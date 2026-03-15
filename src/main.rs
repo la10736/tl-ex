@@ -1,5 +1,6 @@
 //! A simple Pokedex REST API server.
 
+use crate::service::{PokemonService, ServiceError};
 use actix_web::{
     App, Error, HttpResponse, HttpServer, Responder,
     body::MessageBody,
@@ -7,17 +8,21 @@ use actix_web::{
     get, web,
 };
 use clap::Parser;
+// Use `log` instead tracing. A production ready project
+// should use `tracing` to
+// - leverage on `span`
+// - collect events on server
+// - use the collected data to have metrics and alerts based on these metrics
 use log::debug;
 use serde::{Deserialize, Serialize};
-use crate::service::{PokemonService, ServiceError};
 
 mod funtranslation_provider;
 mod language_policies;
 mod rustemon_provider;
 
+mod service;
 #[cfg(test)]
 mod tests;
-mod service;
 
 /// Pokemon data type
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -27,7 +32,6 @@ pub struct Pokemon {
     pub habitat: Option<String>,
     pub is_legendary: bool,
 }
-
 
 #[get("/pokemon/{name}")]
 async fn pokemon(core: web::Data<PokemonService>, name: web::Path<(String,)>) -> impl Responder {
