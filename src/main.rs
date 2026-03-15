@@ -8,9 +8,12 @@ use clap::Parser;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
+#[cfg(test)]
+mod tests;
+
 /// Pokemon data type
 #[derive(Clone, Debug, Serialize, Deserialize)]
-struct Pokemon {
+pub struct Pokemon {
     pub name: String,
     pub description: String,
     pub habitat: Option<String>,
