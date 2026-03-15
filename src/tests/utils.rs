@@ -1,15 +1,7 @@
 use super::*;
 #[derive(Default, Clone)]
 /// Trivial InMemory implementation
-pub struct InMemoryPokemonProvider(HashMap<String, Pokemon>);
-
-impl From<InMemoryPokemonProvider> for Option<PokemonService> {
-    fn from(provider: InMemoryPokemonProvider) -> Self {
-        Some(PokemonService {
-            provider: Box::new(provider),
-        })
-    }
-}
+pub struct InMemoryPokemonProvider(pub HashMap<String, Pokemon>);
 
 impl InMemoryPokemonProvider {
     pub fn add(&mut self, p: Pokemon) {
@@ -29,23 +21,65 @@ impl PokemonProvider for InMemoryPokemonProvider {
     }
 }
 
-#[derive(Default, Clone)]
-/// Just return error every time
-pub struct ErrorPokemonProvider;
+#[derive(Clone)]
+pub struct FakePokemonService {
+    pub pokemon_provider: InMemoryPokemonProvider,
+    pub language: Language,
+    pub translate_ok: bool,
+    pub provide_pokemon_error: bool,
+}
 
-impl From<ErrorPokemonProvider> for Option<PokemonService> {
-    fn from(provider: ErrorPokemonProvider) -> Self {
-        Some(PokemonService {
-            provider: Box::new(provider),
-        })
+impl Default for FakePokemonService {
+    fn default() -> Self {
+        FakePokemonService {
+            pokemon_provider: Default::default(),
+            language: Language::Shakespeare,
+            translate_ok: true,
+            provide_pokemon_error: false,
+        }
+    }
+}
+
+impl FakePokemonService {
+    pub fn description(&self, name: &str) -> Option<String> {
+        self.pokemon_provider
+            .0
+            .get(name)
+            .map(|p| &p.description)
+            .cloned()
     }
 }
 
 #[async_trait]
-impl PokemonProvider for ErrorPokemonProvider {
+impl PokemonProvider for FakePokemonService {
     async fn pokemon(&self, name: &str) -> Result<Pokemon, ServiceError> {
-        Err(ServiceError::Unknown {
-            error: format!("Pokemon name: {}", name),
-        })
+        if self.provide_pokemon_error {
+            return Err(ServiceError::Unknown {
+                error: format!("Pokemon name: {}", name),
+            })
+        }
+        self.pokemon_provider.pokemon(name).await
+    }
+}
+
+#[async_trait]
+impl TranslationProvider for FakePokemonService {
+    async fn translate(&self, lang: Language, body: &str) -> Result<String, ServiceError> {
+        self.translate_ok
+            .then_some(format!("{lang:?},{body}"))
+            .ok_or_else(|| ServiceError::Unknown {
+                error: body.to_string(),
+            })
+    }
+}
+impl SelectLanguagePolicy for FakePokemonService {
+    fn select(&self, _pokemon: &Pokemon) -> Language {
+        self.language
+    }
+}
+
+impl From<FakePokemonService> for Option<PokemonService> {
+    fn from(fake: FakePokemonService) -> Self {
+        Some(PokemonService::new(fake.clone(), fake.clone(), fake))
     }
 }
